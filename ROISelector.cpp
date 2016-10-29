@@ -1,12 +1,12 @@
-#include <iostream>
-#include <vector>
-#include "XMLParser.h"
+#include <stdlib.h>
 
-const std::string TEXT_STYLE = "font-family:Arial;font-size:9pt;font-style:normal;font-weight:normal;fill:#FF0000";
-const std::string RED = "#FF0000";
-const std::string STROKE_WIDTH = "1";
+#include "ROISelector.h"
 
-FILE* openFile(std::string filename) {
+ROISelector::ROISelector(std::string filename) {
+	this->filename = filename;
+}
+
+FILE* ROISelector::openFile() {
 	FILE* file = fopen(filename.c_str(), "r");
 	if (!file)
 	{
@@ -16,16 +16,11 @@ FILE* openFile(std::string filename) {
 	return file;
 }
 
-
-int main(int argc, char** argv) {
-
-	std::string filename = "image.svg";
+int ROISelector::startParser() {
 	FILE* file;
-	if ((file = openFile(filename)) == nullptr) {
-		return 1;
+	if ((file = openFile()) == nullptr) {
+		return -1;
 	}
-
-	std::vector<XMLTag*> rootScope;
 
 	int c;
 	while (!feof(file))
@@ -35,29 +30,31 @@ int main(int argc, char** argv) {
 		{
 			XMLTag* tag = XMLTag::parseBody(file);
 			if (tag)
-				rootScope.push_back(tag);
+				parsedRootScope.push_back(tag);
 		}
 	}
 
-	try
-	{
+}
+
+int ROISelector::findTags() {
+	try {
 		// check if is format of xml file svg
-		if (rootScope.at(0)->tagName.find("svg") == std::string::npos) {
+		if (parsedRootScope.at(0)->tagName.find("svg") == std::string::npos) {
 			std::cout << "Parsing XML failed. Invalid format of svg image!" << std::endl;
 			return 2;
 		}
 
 		// 1st line body of XML is with image informations [0]
 		// 2nd - 5th - informations about red borders around image [1 - 4]
-		for (int i = 5; i < rootScope.at(0)->children.size(); i++) { //start [5th line]
+		for (int i = 5; i < parsedRootScope.at(0)->children.size(); i++) { //start [5th line]
 
-			//std::cout << rootScope.at(0)->children.at(i)->tagName.c_str() << std::endl;
-			XMLTag* rootScopeTag = rootScope.at(0);
+			XMLTag* rootScopeTag = parsedRootScope.at(0);
+			//std::cout << rootScopeTag->children.at(i)->tagName.c_str() << std::endl;
 
-			if ((rootScopeTag->tagName.find("text") != std::string::npos)
-				&& (rootScopeTag->attributes.at("style").find(TEXT_STYLE) != std::string::npos)
+			if ((rootScopeTag->children.at(i)->tagName.find("text") != std::string::npos)
+				&& (rootScopeTag->children.at(i)->attributes.at("style").find(TEXT_STYLE) != std::string::npos)
 				// line stroke-width="1" stroke="#FF0000" 
-				&& ((rootScopeTag->children.at(i + 1)->tagName.find("line") != std::string::npos) && (rootScope.at(0)->children.at(i)->tagName.find("polyline") == std::string::npos))
+				&& ((rootScopeTag->children.at(i + 1)->tagName.find("line") != std::string::npos) && (rootScopeTag->children.at(i)->tagName.find("polyline") == std::string::npos))
 				&& (rootScopeTag->children.at(i + 1)->attributes.at("stroke").find(RED) != std::string::npos)
 				&& (rootScopeTag->children.at(i + 1)->attributes.at("stroke-width").find(STROKE_WIDTH) != std::string::npos)
 				// polyline fill = "#FF0000" stroke = "#FF0000"
@@ -69,7 +66,9 @@ int main(int argc, char** argv) {
 				&& (rootScopeTag->children.at(i + 3)->attributes.at("fill").find(RED) != std::string::npos)
 				&& (rootScopeTag->children.at(i + 3)->attributes.at("stroke").find(RED) != std::string::npos))
 			{
-				std::cout << "TEXT" << std::endl;
+				parsedLines.push_back(new Line(atof(rootScopeTag->children.at(i + 1)->attributes.at("x1").c_str()), atof(rootScopeTag->children.at(i + 1)->attributes.at("x2").c_str()),
+					atof(rootScopeTag->children.at(i + 1)->attributes.at("y1").c_str()), atof(rootScopeTag->children.at(i + 1)->attributes.at("y2").c_str())));
+				std::cout << "LINE, x1 = " << rootScopeTag->children.at(i + 1)->attributes.at("x1").c_str() << ", x2 = " << rootScopeTag->children.at(i + 1)->attributes.at("x2").c_str() << ", y1 = " << rootScopeTag->children.at(i + 1)->attributes.at("y1").c_str() << ", y2 = " << rootScopeTag->children.at(i + 1)->attributes.at("y2").c_str() << std::endl;
 			}
 			/*
 			cross:
@@ -85,19 +84,19 @@ int main(int argc, char** argv) {
 				std::cout << "CROSS" << std::endl;
 			}
 			// line stroke - width = "1" stroke = "#FF0000
-			else if (((rootScopeTag->children.at(i)->tagName.find("line") != std::string::npos) && (rootScope.at(0)->children.at(i)->tagName.find("polyline") == std::string::npos))
+			else if (((rootScopeTag->children.at(i)->tagName.find("line") != std::string::npos) && (parsedRootScope.at(0)->children.at(i)->tagName.find("polyline") == std::string::npos))
 				&& (rootScopeTag->children.at(i)->attributes.at("stroke-width").find(STROKE_WIDTH) != std::string::npos)
 				&& (rootScopeTag->children.at(i)->attributes.at("stroke").find(RED) != std::string::npos)
 				// line stroke - width = "1" stroke = "#FF0000
-				&& ((rootScopeTag->children.at(i + 1)->tagName.find("line") != std::string::npos) && (rootScope.at(0)->children.at(i + 1)->tagName.find("polyline") == std::string::npos))
+				&& ((rootScopeTag->children.at(i + 1)->tagName.find("line") != std::string::npos) && (parsedRootScope.at(0)->children.at(i + 1)->tagName.find("polyline") == std::string::npos))
 				&& (rootScopeTag->children.at(i + 1)->attributes.at("stroke").find(RED) != std::string::npos)
 				&& (rootScopeTag->children.at(i + 1)->attributes.at("stroke-width").find(STROKE_WIDTH) != std::string::npos)
 				// line stroke - width = "1" stroke = "#FF0000
-				&& ((rootScopeTag->children.at(i + 2)->tagName.find("line") != std::string::npos) && (rootScope.at(0)->children.at(i + 2)->tagName.find("polyline") == std::string::npos))
+				&& ((rootScopeTag->children.at(i + 2)->tagName.find("line") != std::string::npos) && (parsedRootScope.at(0)->children.at(i + 2)->tagName.find("polyline") == std::string::npos))
 				&& (rootScopeTag->children.at(i + 2)->attributes.at("stroke").find(RED) != std::string::npos)
 				&& (rootScopeTag->children.at(i + 2)->attributes.at("stroke-width").find(STROKE_WIDTH) != std::string::npos)
 				// line stroke - width = "1" stroke = "#FF0000
-				&& ((rootScopeTag->children.at(i + 3)->tagName.find("line") != std::string::npos) && (rootScope.at(0)->children.at(i + 3)->tagName.find("polyline") == std::string::npos))
+				&& ((rootScopeTag->children.at(i + 3)->tagName.find("line") != std::string::npos) && (parsedRootScope.at(0)->children.at(i + 3)->tagName.find("polyline") == std::string::npos))
 				&& (rootScopeTag->children.at(i + 3)->attributes.at("stroke").find(RED) != std::string::npos)
 				&& (rootScopeTag->children.at(i + 3)->attributes.at("stroke-width").find(STROKE_WIDTH) != std::string::npos)
 				// circle stroke-width="1" stroke="#FF0000 fill="none"
@@ -114,6 +113,14 @@ int main(int argc, char** argv) {
 		std::cout << "Error during parsing XML file. With error message: " << e.what() << std::endl;
 		return 2;
 	}
-	
-	return 0;
+
+	return 1;
+}
+
+std::vector<XMLTag*> ROISelector::getParsedRootScope() {
+	return this->parsedRootScope;
+}
+
+std::vector<Line*> ROISelector::getParsedLines() {
+	return this->parsedLines;
 }
