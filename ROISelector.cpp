@@ -1,22 +1,51 @@
 #include <stdlib.h>
 
+#include "opencv2/highgui/highgui.hpp"
+
 #include "ROISelector.h"
 
-ROISelector::ROISelector(std::string filename) {
-	this->filename = filename;
+FILE* ROISelector::openFile() {
+	return openFile(this->filenameSVG);
 }
 
-FILE* ROISelector::openFile() {
+ROISelector::ROISelector(std::string filenameSVG) {
+	// e.g. ABoard_TX-55AS650B_%NH-4540419(35724).svg
+	this->filenameSVG = filenameSVG;
+	// e.g. ABoard_TX-55AS650B_%NH-4540419(35724).jpg
+	std::string extensionJPG = "jpg";
+	this->filenameJPG = (filenameSVG.substr(0, filenameSVG.find_last_of(".") + 1)).append(extensionJPG);
+}
+
+FILE* ROISelector::openFile(std::string filename) {
+
 	FILE* file = fopen(filename.c_str(), "r");
 	if (!file)
 	{
 		std::cerr << "Opening of file '" << filename.c_str() << "' failed" << std::endl;
 		return nullptr;
 	}
+
 	return file;
 }
 
-int ROISelector::startParser() {
+int ROISelector::runEqualization() {
+
+	cv::Mat image = cv::imread(this->filenameJPG.c_str(), cv::IMREAD_GRAYSCALE);
+
+	if (image.empty()) {
+		std::cout << "Could not open or find the image" << std::endl;
+		return -1;
+	}
+
+	cv::equalizeHist(image, this->equalizedImage);
+
+//	cv::imshow("Display window", equalizedImage);
+//	cv::waitKey(0);
+
+	return 1;
+}
+
+int ROISelector::runParser() {
 	FILE* file;
 	if ((file = openFile()) == nullptr) {
 		return -1;
@@ -34,6 +63,7 @@ int ROISelector::startParser() {
 		}
 	}
 
+	return 1;
 }
 
 int ROISelector::findTags() {
