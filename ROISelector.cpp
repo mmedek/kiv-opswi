@@ -13,6 +13,7 @@ ROISelector::ROISelector(std::string filenameSVG) {
 	this->filenameSVG = filenameSVG;
 	// e.g. ABoard_TX-55AS650B_%NH-4540419(35724).jpg
 	std::string extensionJPG = "jpg";
+	this->filename = filenameSVG.substr(0, filenameSVG.find_last_of("."));
 	this->filenameJPG = (filenameSVG.substr(0, filenameSVG.find_last_of(".") + 1)).append(extensionJPG);
 }
 
@@ -28,13 +29,13 @@ FILE* ROISelector::openFile(std::string filename) {
 	return file;
 }
 
-int ROISelector::runEqualization() {
+int ROISelector::preprocess() {
 
 	cv::Mat image = cv::imread(this->filenameJPG.c_str(), cv::IMREAD_GRAYSCALE);
 
 	if (image.empty()) {
 		std::cout << "Could not open or find the image" << std::endl;
-		return -1;
+		exit(0);
 	}
 
 	cv::equalizeHist(image, this->equalizedImage);
@@ -45,10 +46,78 @@ int ROISelector::runEqualization() {
 	return 1;
 }
 
+//[x1, y1]	+---------------+
+//			+				+
+//			+				+
+//			+		X		+
+//			+				+
+//			+				+		
+//			+---------------+	[x2, y2]
+int ROISelector::cutROIs() {
+
+	double middleX = 0; // middle X - for vertical or horizontal line is computation same
+	double middleY = 0;	// middle X - for vertical or horizontal line is computation same
+	double x1 = 0;
+	double x2 = 0;
+	double y1 = 0;
+	double y2 = 0;
+	std::string segmentFilename = SEGMENTED_IMAGE_PREFIX_PATH;
+	// add name of processed file
+	segmentFilename.append(this->filename);
+	// separate name of file and index of line with '_'
+	segmentFilename.append("_");
+
+	int index = 0;
+
+	for (int i = 0; i < this->getParsedLines().size(); i++) {
+		middleX = (this->getParsedLines()[i]->getX1() + this->getParsedLines()[i]->getX2()) / 2;
+		middleY = (this->getParsedLines()[i]->getY1() + this->getParsedLines()[i]->getY2()) / 2;
+
+		x1 = middleX - ROI_WIDTH;
+		x2 = middleX + ROI_WIDTH;
+		y1 = middleY - ROI_HEIGHT;
+		y2 = middleY + ROI_HEIGHT;
+
+		// border checks
+		if (x2 > this->equalizedImage.size().width) {
+			x2 = this->equalizedImage.size().width;
+			x1 = x2 - 2 * ROI_WIDTH;
+		}
+		
+		if (x1 < 0) {
+			x1 = 0;
+			x2 = 2 * ROI_WIDTH;
+		}
+
+		if (y2 > this->equalizedImage.size().height) {
+			y2 = this->equalizedImage.size().height;
+			y1 = y2 - 2 * ROI_HEIGHT;
+		}
+
+		if (y1 < 0) {
+			y1 = 0;
+			y2 = 2 * ROI_WIDTH;
+		}
+
+		cv::Mat segment = cv::Mat(equalizedImage, cv::Rect(x1, y1, 2 * ROI_WIDTH, 2 * ROI_HEIGHT));
+//		std::cout << "x1 = " << x1 << ", x2 = " << x2 << ", y1 = " << y1 << ", y2 = " << y2 << std::endl;
+
+//		cv::imshow("Segment", segment);
+//		cv::waitKey(0);
+
+		// add index and extension '.jpg' to segmented image
+		cv::imwrite((segmentFilename.append(std::to_string(index))).append(".jpg"), segment);
+		
+	}
+
+	return 1;
+
+}
+
 int ROISelector::runParser() {
 	FILE* file;
 	if ((file = openFile()) == nullptr) {
-		return -1;
+		exit(0);
 	}
 
 	int c;
@@ -71,7 +140,7 @@ int ROISelector::findTags() {
 		// check if is format of xml file svg
 		if (parsedRootScope.at(0)->tagName.find("svg") == std::string::npos) {
 			std::cout << "Parsing XML failed. Invalid format of svg image!" << std::endl;
-			return 2;
+			exit(0);
 		}
 
 		// 1st line body of XML is with image informations [0]
@@ -141,7 +210,7 @@ int ROISelector::findTags() {
 	catch (std::exception e)
 	{
 		std::cout << "Error during parsing XML file. With error message: " << e.what() << std::endl;
-		return 2;
+		exit(0);
 	}
 
 	return 1;
