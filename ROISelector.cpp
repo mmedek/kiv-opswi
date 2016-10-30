@@ -3,17 +3,20 @@
 #include "opencv2/highgui/highgui.hpp"
 
 #include "ROISelector.h"
+#include "api.h"
 
 FILE* ROISelector::openFile() {
 	return openFile(this->filenameSVG);
 }
 
 ROISelector::ROISelector(std::string filenameSVG) {
-	// e.g. ABoard_TX-55AS650B_%NH-4540419(35724).svg
+	// e.g. ../data/ABoard_TX-55AS650B_%NH-4540419(35724).svg
 	this->filenameSVG = filenameSVG;
-	// e.g. ABoard_TX-55AS650B_%NH-4540419(35724).jpg
+	// e.g. ABoard_TX-55AS650B_%NH-4540419(35724)
 	std::string extensionJPG = "jpg";
-	this->filename = filenameSVG.substr(0, filenameSVG.find_last_of("."));
+	std::string file = filenameSVG.substr(filenameSVG.find_last_of("/") + 1);
+	this->filename = file.substr(0, file.find_last_of("."));
+	// e.g. ../data/ABoard_TX-55AS650B_%NH-4540419(35724).jpg
 	this->filenameJPG = (filenameSVG.substr(0, filenameSVG.find_last_of(".") + 1)).append(extensionJPG);
 }
 
@@ -40,8 +43,16 @@ int ROISelector::preprocess() {
 
 	cv::equalizeHist(image, this->equalizedImage);
 
-//	cv::imshow("Display window", equalizedImage);
+	// sharpening
+	cv::Mat sharpenedImg;
+	GaussianBlur(this->equalizedImage, sharpenedImg, cv::Size(0, 0), 3);
+	addWeighted(this->equalizedImage, 1.5, sharpenedImg, -0.5, 0, sharpenedImg);
+
+//	cv::imshow("sharpened", sharpenedImg);
+//	cv::imshow("equalized", equalizedImage);
 //	cv::waitKey(0);
+
+	this->equalizedImage = sharpenedImg;
 
 	return 1;
 }
@@ -66,8 +77,7 @@ int ROISelector::cutROIs() {
 	segmentFilename.append(this->filename);
 	// separate name of file and index of line with '_'
 	segmentFilename.append("_");
-
-	int index = 0;
+	index = 0;
 
 	for (int i = 0; i < this->getParsedLines().size(); i++) {
 		middleX = (this->getParsedLines()[i]->getX1() + this->getParsedLines()[i]->getX2()) / 2;
@@ -106,7 +116,8 @@ int ROISelector::cutROIs() {
 //		cv::waitKey(0);
 
 		// add index and extension '.jpg' to segmented image
-		cv::imwrite((segmentFilename.append(std::to_string(index))).append(".jpg"), segment);
+		std::string newSegmentFilename = segmentFilename;
+		cv::imwrite((newSegmentFilename.append(std::to_string(index++))).append(".jpg"), segment);
 		
 	}
 
