@@ -9,8 +9,6 @@
 #include "Line.h"
 #include "ImageRecord.h"
 
-static int counter = 0;
-
 class ROISelector {
 	private:
 		const std::string TEXT_STYLE = "font-family:Arial;font-size:9pt;font-style:normal;font-weight:normal;fill:#FF0000";

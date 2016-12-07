@@ -139,12 +139,7 @@ for (int i = 0; i < this->getParsedLines().size(); i++) {
 		this->segment = cv::Mat(equalizedImage, cv::Rect(x1, y1, 2 * ROI_WIDTH, 2 * ROI_HEIGHT));
 		std::string temp = segmentFilename;
 		this->segmentedImageFilename = (temp.append(std::to_string(index++))).append(".jpg");
-		this->addImageToGroup(middleX, middleY);
-
-//		std::cout << "x1 = " << x1 << ", x2 = " << x2 << ", y1 = " << y1 << ", y2 = " << y2 << std::endl;
-//		cv::imshow("Segment", segment);
-//		cv::waitKey(0);
-		
+		this->addImageToGroup(middleX, middleY);		
 	}
 
 	return 1;
@@ -155,7 +150,6 @@ void ROISelector::printGroup() {
 	
 	for (unsigned int i = 0; i < this->surfGroups.size(); i++) {
 		for (int j = 0; j < this->surfGroups.at(i).size(); j++) {
-			//std::cout << "i = " << i << ", j = " << j << ", x = " << this->surfGroups[i][j]->getX() << ", y = " << this->surfGroups[i][j]->getY() << std::endl;
 			std::string temp = SEGMENTED_IMAGE_PREFIX_PATH;
 			temp += (char)('a' + i);
 			temp.append("/"); // groups a-z
@@ -164,7 +158,6 @@ void ROISelector::printGroup() {
 			cv::imwrite(temp, this->surfGroups[i][j]->getImage());
 		}
 	}
-	std::cout << "Counter = " << counter << std::endl;
 }
 
 void ROISelector::addImageToGroup(double middleX, double middleY) {

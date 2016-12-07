@@ -20,12 +20,12 @@ int main(int argc, char** argv) {
 		//method for segmentation lines (in future, next shapes too) cut 128 x 128 ROIs
 		std::cout << "Result of segmentations ROIs: " << selector->cutROIs() << std::endl;
 		std::cout << "Result of equalization: " << selector->preprocess() << std::endl;
-		//std::cout << "Saving image: " << selector->writeImage() << std::endl;
 		std::cout << "Processing image '" << image.c_str() << "' ended" << std::endl;
 		run = true;
 	}
+	// if was processing images running write image to groups
 	if (run)
-		selector->printGroup();
+		selector->writeGroups();
 
 	return 0;
 
@@ -45,12 +45,9 @@ std::vector<std::string> get_all_files_names_within_folder(std::string folder) {
 			if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
 				fullFilename = fd.cFileName;
 				// we not save jpg files
-				//std::cout << "fd.cFileName: " << fd.cFileName << std::endl;
-				//std::cout << "folder: " << folder << std::endl;
 				if (fullFilename.substr(fullFilename.find_last_of(".") + 1).find("jpg") == std::string::npos) {
 					std::string fullname = folder;
 					fullname.append(fd.cFileName);
-				//	std::cout << "index = " << index++ << ": " << fullname.c_str() << std::endl;
 					names.push_back(fullname);
 				}
 
