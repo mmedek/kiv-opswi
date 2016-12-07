@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <windows.h>
 
 #include "opencv2/highgui/highgui.hpp"
 
@@ -9,7 +10,10 @@ FILE* ROISelector::openFile() {
 	return openFile(this->filenameSVG);
 }
 
-ROISelector::ROISelector(std::string filenameSVG) {
+ROISelector::ROISelector() {}
+
+void ROISelector::set_new_image(std::string filenameSVG) {
+	init();
 	// e.g. ../data/ABoard_TX-55AS650B_%NH-4540419(35724).svg
 	this->filenameSVG = filenameSVG;
 	// e.g. ABoard_TX-55AS650B_%NH-4540419(35724)
@@ -18,6 +22,19 @@ ROISelector::ROISelector(std::string filenameSVG) {
 	this->filename = file.substr(0, file.find_last_of("."));
 	// e.g. ../data/ABoard_TX-55AS650B_%NH-4540419(35724).jpg
 	this->filenameJPG = (filenameSVG.substr(0, filenameSVG.find_last_of(".") + 1)).append(extensionJPG);
+}
+
+void ROISelector::init() {
+	this->filenameSVG = "";
+	this->filename = "";
+	this->filenameJPG = "";
+	this->segmentedImageFilename = "";
+
+	while (this->parsedRootScope.size() != 0)
+		this->parsedRootScope.pop_back(); // we need to empty this before processing next image
+
+	while(this->parsedLines.size() != 0)
+		this->parsedLines.pop_back();
 }
 
 FILE* ROISelector::openFile(std::string filename) {
@@ -65,6 +82,14 @@ int ROISelector::preprocess() {
 //			+				+		
 //			+---------------+	[x2, y2]
 int ROISelector::cutROIs() {
+	// this should be there because it is possible to run equalization before this or otherwise
+	
+	this->equalizedImage = cv::imread(this->filenameJPG.c_str(), cv::IMREAD_GRAYSCALE);
+
+	if (this->equalizedImage.empty()) {
+		std::cout << "Could not open or find the image" << std::endl;
+		exit(0);
+	}
 
 	double middleX = 0; // middle X - for vertical or horizontal line is computation same
 	double middleY = 0;	// middle X - for vertical or horizontal line is computation same
@@ -74,12 +99,13 @@ int ROISelector::cutROIs() {
 	double y2 = 0;
 	std::string segmentFilename = SEGMENTED_IMAGE_PREFIX_PATH;
 	// add name of processed file
-	segmentFilename.append(this->filename);
 	// separate name of file and index of line with '_'
+	segmentFilename.append(this->filename);
 	segmentFilename.append("_");
 	index = 0;
 
-	for (int i = 0; i < this->getParsedLines().size(); i++) {
+for (int i = 0; i < this->getParsedLines().size(); i++) {
+
 		middleX = (this->getParsedLines()[i]->getX1() + this->getParsedLines()[i]->getX2()) / 2;
 		middleY = (this->getParsedLines()[i]->getY1() + this->getParsedLines()[i]->getY2()) / 2;
 
@@ -109,20 +135,57 @@ int ROISelector::cutROIs() {
 			y2 = 2 * ROI_WIDTH;
 		}
 
-		cv::Mat segment = cv::Mat(equalizedImage, cv::Rect(x1, y1, 2 * ROI_WIDTH, 2 * ROI_HEIGHT));
-//		std::cout << "x1 = " << x1 << ", x2 = " << x2 << ", y1 = " << y1 << ", y2 = " << y2 << std::endl;
+		counter++;
+		this->segment = cv::Mat(equalizedImage, cv::Rect(x1, y1, 2 * ROI_WIDTH, 2 * ROI_HEIGHT));
+		std::string temp = segmentFilename;
+		this->segmentedImageFilename = (temp.append(std::to_string(index++))).append(".jpg");
+		this->addImageToGroup(middleX, middleY);
 
+//		std::cout << "x1 = " << x1 << ", x2 = " << x2 << ", y1 = " << y1 << ", y2 = " << y2 << std::endl;
 //		cv::imshow("Segment", segment);
 //		cv::waitKey(0);
-
-		// add index and extension '.jpg' to segmented image
-		std::string newSegmentFilename = segmentFilename;
-		cv::imwrite((newSegmentFilename.append(std::to_string(index++))).append(".jpg"), segment);
 		
 	}
 
 	return 1;
 
+}
+
+void ROISelector::printGroup() {
+	
+	for (unsigned int i = 0; i < this->surfGroups.size(); i++) {
+		for (int j = 0; j < this->surfGroups.at(i).size(); j++) {
+			//std::cout << "i = " << i << ", j = " << j << ", x = " << this->surfGroups[i][j]->getX() << ", y = " << this->surfGroups[i][j]->getY() << std::endl;
+			std::string temp = SEGMENTED_IMAGE_PREFIX_PATH;
+			temp += (char)('a' + i);
+			temp.append("/"); // groups a-z
+			CreateDirectory(temp.c_str(), NULL);
+			temp.append(this->surfGroups[i][j]->getFilename().substr(this->surfGroups[i][j]->getFilename().find_last_of("/\\") + 1));
+			cv::imwrite(temp, this->surfGroups[i][j]->getImage());
+		}
+	}
+	std::cout << "Counter = " << counter << std::endl;
+}
+
+void ROISelector::addImageToGroup(double middleX, double middleY) {
+
+	for (unsigned int i = 0; i < this->surfGroups.size(); i++) {
+		if ((std::abs(middleX - this->surfGroups[i][0]->getX()) < MAX_DEVIATION) && (std::abs(middleY - this->surfGroups[i][0]->getY()) < MAX_DEVIATION)) {
+			this->surfGroups.at(i).push_back(new ImageRecord(middleX, middleY, this->segment, this->segmentedImageFilename));
+			return;
+		}
+	}
+
+	std::vector<ImageRecord*> new_group;
+	this->surfGroups.push_back(new_group);
+	this->surfGroups.at(this->surfGroups.size() - 1).push_back(new ImageRecord(middleX, middleY, this->segment, this->segmentedImageFilename));
+}
+
+int ROISelector::writeImage() {
+	// add index and extension '.jpg' to segmented image
+	cv::imwrite(this->segmentedImageFilename, this->segment);
+
+	return 1;
 }
 
 int ROISelector::runParser() {

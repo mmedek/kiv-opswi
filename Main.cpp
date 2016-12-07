@@ -7,17 +7,25 @@ std::vector<std::string> get_all_files_names_within_folder(std::string folder);
 int main(int argc, char** argv) {
 
 	std::string folder = "C:/Users/mmedek.MMEDEK-NB/Documents/Visual Studio 2015/Projects/ROISelector/data/ABoard/";
+	ROISelector* selector = new ROISelector();
+	bool run = false;
+
 	for (std::string& image : get_all_files_names_within_folder(folder)) {
-		ROISelector* selector = new ROISelector(image);
+		
+		selector->set_new_image(image);
 		std::cout << "Processing image '" << image.c_str() << "' started" << std::endl;
 		// success result = 1
 		std::cout << "Result of parsing: " << selector->runParser() << std::endl;
 		std::cout << "Result of selecting: " << selector->findTags() << std::endl;
-		std::cout << "Result of equalization: " << selector->preprocess() << std::endl;
 		//method for segmentation lines (in future, next shapes too) cut 128 x 128 ROIs
 		std::cout << "Result of segmentations ROIs: " << selector->cutROIs() << std::endl;
+		std::cout << "Result of equalization: " << selector->preprocess() << std::endl;
+		//std::cout << "Saving image: " << selector->writeImage() << std::endl;
 		std::cout << "Processing image '" << image.c_str() << "' ended" << std::endl;
+		run = true;
 	}
+	if (run)
+		selector->printGroup();
 
 	return 0;
 
