@@ -17,9 +17,11 @@ class ROISelector {
 		const unsigned int MAX_DEVIATION = 10;
 		// width is 164 - this is half width
 
-		const int ROI_WIDTH = 86;
+		const float PI = 3.1415927;
+
+		const int ROI_WIDTH = 64;
 		// height is 164 - this is half height
-		const int ROI_HEIGHT = 86;
+		const int ROI_HEIGHT = 64;
 		// prefix of filepatg segmented image
 		const std::string SEGMENTED_IMAGE_PREFIX_PATH = "../segmented_images/";
 
@@ -32,6 +34,7 @@ class ROISelector {
 		std::string segmentedImageFilename;
 		FILE* openFile();
 		FILE* openFile(std::string);
+		float get_angle(cv::Point2f A, cv::Point2f B);
 		std::vector<XMLTag*> parsedRootScope;
 		std::vector<Line*> parsedLines;
 		void addImageToGroup(double middleX, double middleY);
@@ -40,12 +43,13 @@ class ROISelector {
 	public:
 		ROISelector();
 		void set_new_image(std::string);
-		void printGroup();
+		void writeGroups();
 		int runParser();
 		int findTags();
 		int preprocess();
 		int cutROIs();
-		int ROISelector::writeImage();
+		int writeImage();
+		void processSURF();
 		std::vector<XMLTag*> getParsedRootScope();
 		std::vector<Line*> getParsedLines();
 };
