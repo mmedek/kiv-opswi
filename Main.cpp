@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
 	}
 	// if was processing images running write image to groups
 	if (run) {
-		//selector->writeGroups();
+		selector->writeGroups();
 
 		// 1) Extract features (SURF or SIFT or others...)
 		// 2) Match the features (FLANN or BruteForce...) and filter the matchings

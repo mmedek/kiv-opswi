@@ -14,7 +14,7 @@ class ROISelector {
 		const std::string TEXT_STYLE = "font-family:Arial;font-size:9pt;font-style:normal;font-weight:normal;fill:#FF0000";
 		const std::string RED = "#FF0000";
 		const std::string STROKE_WIDTH = "1";
-		const unsigned int MAX_DEVIATION = 10;
+		const unsigned int MAX_DEVIATION = 20;
 		// width is 164 - this is half width
 
 		const float PI = 3.1415927;
@@ -24,6 +24,7 @@ class ROISelector {
 		const int ROI_HEIGHT = 64;
 		// prefix of filepatg segmented image
 		const std::string SEGMENTED_IMAGE_PREFIX_PATH = "../segmented_images/";
+		const std::string NEGATIVE_ROIS_IMAGE_PREFIX_PATH = "../negative_rois/";
 
 		std::string filename;
 		std::string filenameSVG;
