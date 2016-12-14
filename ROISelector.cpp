@@ -6,7 +6,6 @@
 #include "opencv2/features2d.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/calib3d.hpp"
-#include "opencv2/xfeatures2d.hpp"
 
 #include "ROISelector.h"
 #include "api.h"
@@ -44,7 +43,8 @@ void ROISelector::init() {
 
 FILE* ROISelector::openFile(std::string filename) {
 
-	FILE* file = fopen(filename.c_str(), "r");
+	FILE* file;
+	fopen_s(&file, filename.c_str(), "r");
 	if (!file)
 	{
 		std::cerr << "Opening of file '" << filename.c_str() << "' failed" << std::endl;
@@ -162,9 +162,6 @@ void ROISelector::writeGroups() {
 
 void ROISelector::processSURF() {
 
-	int minHessian = 400;
-	cv::Ptr<cv::xfeatures2d::SURF> detector = cv::xfeatures2d::SURF::create(minHessian);
-
 	std::vector<cv::KeyPoint> keypoints_object, keypoints_scene;
 	cv::Mat descriptors_object, descriptors_scene;
 	cv::Mat img_scene;
@@ -177,7 +174,6 @@ void ROISelector::processSURF() {
 
 			if (j == 0) {
 				img_object = this->surfGroups[i][0]->getImage();
-				detector->detectAndCompute(img_object, cv::Mat(), keypoints_object, descriptors_object);
 				// create new folder for saving ROIs
 				temp = NEGATIVE_ROIS_IMAGE_PREFIX_PATH;
 				temp += "roi_";
@@ -191,7 +187,7 @@ void ROISelector::processSURF() {
 			cv::Mat  img_scene_temp = cv::imread(this->surfGroups[i][j]->getOrigFilename().c_str(), cv::IMREAD_GRAYSCALE);
 			cv::equalizeHist(img_scene_temp, img_scene);
 
-			int match_method = cv::TM_SQDIFF_NORMED;
+			int match_method = cv::TM_CCOEFF_NORMED;
 
 			cv::Mat img_display;
 			img_scene.copyTo(img_display);
@@ -210,7 +206,7 @@ void ROISelector::processSURF() {
 			cv::Point maxLoc;
 
 			cv::minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
-			cv::Point matchLoc = minLoc;
+			cv::Point matchLoc = maxLoc;
 
 			cv::Point second_point = cv::Point(matchLoc.x + img_object.cols, matchLoc.y + img_object.rows);
 
@@ -230,6 +226,68 @@ void ROISelector::processSURF() {
 			cv::imwrite(temp, cropped);
 
 		}
+	}
+}
+
+void ROISelector::segmentate_positive_ROIs() {
+
+	cv::Mat img_scene;
+	cv::Mat img_object;
+	cv::Mat result;
+	std::string temp = POSITIVE_ROIS_IMAGE_PREFIX_PATH;
+
+	for (int i = 0; i < this->surfGroups.size(); i++) {
+
+		// get template of negative ROI and select same image as positive ROI
+		img_object = this->surfGroups[i][0]->getImage();
+		// create new folder for saving ROIs
+		temp = POSITIVE_ROIS_IMAGE_PREFIX_PATH;
+		temp += "roi_";
+		temp += (char)('a' + i);
+		temp.append("/"); // groups a-z
+		CreateDirectory(temp.c_str(), NULL);
+
+		img_scene = this->equalizedImage;
+
+		int match_method = cv::TM_CCOEFF_NORMED;
+
+		cv::Mat img_display;
+		img_scene.copyTo(img_display);
+
+		int result_cols = img_scene.cols - img_object.cols + 1;
+		int result_rows = img_scene.rows - img_object.rows + 1;
+
+		result.create(result_rows, result_cols, CV_32FC1);
+
+		cv::matchTemplate(img_scene, img_object, result, match_method);
+		cv::normalize(result, result, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
+
+		double minVal;
+		double maxVal;
+		cv::Point minLoc;
+		cv::Point maxLoc;
+
+		cv::minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
+		cv::Point matchLoc = maxLoc;
+
+		cv::Point second_point = cv::Point(matchLoc.x + img_object.cols, matchLoc.y + img_object.rows);
+
+		cv::rectangle(img_display, matchLoc, second_point, cv::Scalar::all(0), 2, 8, 0);
+		cv::rectangle(result, matchLoc, second_point, cv::Scalar::all(0), 2, 8, 0);
+
+		cv::Rect myROI(matchLoc.x, matchLoc.y, second_point.x - matchLoc.x, second_point.y - matchLoc.y);
+		cv::Mat cropped(img_scene, myROI);
+
+		//cv::imwrite(this->surfGroups[i][j]->getFilename(), cropped);
+		temp = POSITIVE_ROIS_IMAGE_PREFIX_PATH;
+		temp += "roi_";
+		temp += (char)('a' + i);
+		temp.append("/"); // groups a-z
+		temp.append(this->filename.substr(this->filename.find_last_of("/\\") + 1));
+		temp.append(".jpg");
+
+		cv::imwrite(temp, cropped);
+
 	}
 }
 
@@ -307,7 +365,7 @@ int ROISelector::findTags() {
 			{
 				parsedLines.push_back(new Line(atof(rootScopeTag->children.at(i + 1)->attributes.at("x1").c_str()), atof(rootScopeTag->children.at(i + 1)->attributes.at("x2").c_str()),
 					atof(rootScopeTag->children.at(i + 1)->attributes.at("y1").c_str()), atof(rootScopeTag->children.at(i + 1)->attributes.at("y2").c_str())));
-				std::cout << "LINE, x1 = " << rootScopeTag->children.at(i + 1)->attributes.at("x1").c_str() << ", x2 = " << rootScopeTag->children.at(i + 1)->attributes.at("x2").c_str() << ", y1 = " << rootScopeTag->children.at(i + 1)->attributes.at("y1").c_str() << ", y2 = " << rootScopeTag->children.at(i + 1)->attributes.at("y2").c_str() << std::endl;
+				//std::cout << "LINE, x1 = " << rootScopeTag->children.at(i + 1)->attributes.at("x1").c_str() << ", x2 = " << rootScopeTag->children.at(i + 1)->attributes.at("x2").c_str() << ", y1 = " << rootScopeTag->children.at(i + 1)->attributes.at("y1").c_str() << ", y2 = " << rootScopeTag->children.at(i + 1)->attributes.at("y2").c_str() << std::endl;
 			}
 			/*
 			cross:
@@ -343,7 +401,7 @@ int ROISelector::findTags() {
 				&& (rootScopeTag->children.at(i + 4)->attributes.at("stroke").find(RED) != std::string::npos)
 				&& (rootScopeTag->children.at(i + 4)->attributes.at("fill").find("none") != std::string::npos))
 			{
-				std::cout << "CIRCLE" << std::endl;
+				//std::cout << "CIRCLE" << std::endl;
 			}
 		}
 	}

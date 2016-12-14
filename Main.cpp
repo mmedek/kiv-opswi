@@ -3,24 +3,42 @@
 #include "ROISelector.h"
 
 std::vector<std::string> get_all_files_names_within_folder(std::string folder);
+void prepareNegativeROIs();
+void preparePostiveROIs();
+
+ROISelector* selector;
 
 int main(int argc, char** argv) {
 
-	std::string folder = "C:/Users/mmedek.MMEDEK-NB/Documents/Visual Studio 2015/Projects/ROISelector/data/ABoard/";
-	ROISelector* selector = new ROISelector();
+	prepareNegativeROIs();
+	preparePostiveROIs();
+
+	return 0;
+
+}
+
+void prepareNegativeROIs() {
+
+	std::string folder = "C:/Users/mmedek.MMEDEK-NB/Documents/Visual Studio 2015/Projects/ROISelector/data/ABoard_n/";
+	selector = new ROISelector();
 	bool run = false;
 
 	for (std::string& image : get_all_files_names_within_folder(folder)) {
-		
+
 		selector->set_new_image(image);
-		std::cout << "Processing image '" << image.c_str() << "' started" << std::endl;
+		//std::cout << "Processing image '" << image.c_str() << "' started" << std::endl;
 		// success result = 1
-		std::cout << "Result of parsing: " << selector->runParser() << std::endl;
-		std::cout << "Result of selecting: " << selector->findTags() << std::endl;
+		//std::cout << "Result of parsing: " <<  << std::endl;
+		selector->runParser();
+		//std::cout << "Result of selecting: " << selector->findTags() << std::endl;
+		selector->findTags();
 		//method for segmentation lines (in future, next shapes too) cut 128 x 128 ROIs
-		std::cout << "Result of segmentations ROIs: " << selector->cutROIs() << std::endl;
-		std::cout << "Result of equalization: " << selector->preprocess() << std::endl;
-		std::cout << "Processing image '" << image.c_str() << "' ended" << std::endl;
+		//std::cout << "Result of segmentations ROIs: " << selector->cutROIs() << std::endl;
+		selector->cutROIs();
+		//std::cout << "Result of equalization: " << selector->preprocess() << std::endl;
+		selector->preprocess();
+		//std::cout << "Processing image '" << image.c_str() << "' ended" << std::endl;
+
 		run = true;
 	}
 	// if was processing images running write image to groups
@@ -31,12 +49,32 @@ int main(int argc, char** argv) {
 		// 2) Match the features (FLANN or BruteForce...) and filter the matchings
 		// 3) Find the geometrical transformation (RANSAC or LMeds...)
 		selector->processSURF();
-		
+
 
 	}
+}
 
-	return 0;
+void preparePostiveROIs() {
 
+	std::string folder = "C:/Users/mmedek.MMEDEK-NB/Documents/Visual Studio 2015/Projects/ROISelector/data/ABoard_p/";
+	bool run = false;
+
+	for (std::string& image : get_all_files_names_within_folder(folder)) {
+
+		selector->set_new_image(image);
+		//std::cout << "Processing image '" << image.c_str() << "' started" << std::endl;
+		// success result = 1
+		//std::cout << "Result of parsing: " << selector->runParser() << std::endl;
+		//std::cout << "Result of selecting: " << selector->findTags() << std::endl;
+		//method for segmentation lines (in future, next shapes too) cut 128 x 128 ROIs
+		//std::cout << "Result of segmentations ROIs: " << selector->cutROIs() << std::endl;
+		//std::cout << "Result of equalization: " <<  << std::endl;
+		selector->preprocess();
+		selector->segmentate_positive_ROIs();
+
+		//std::cout << "Processing image '" << image.c_str() << "' ended" << std::endl;
+	}
+	
 }
 
 std::vector<std::string> get_all_files_names_within_folder(std::string folder) {

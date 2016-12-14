@@ -25,6 +25,8 @@ class ROISelector {
 		// prefix of filepatg segmented image
 		const std::string SEGMENTED_IMAGE_PREFIX_PATH = "../segmented_images/";
 		const std::string NEGATIVE_ROIS_IMAGE_PREFIX_PATH = "../negative_rois/";
+		const std::string POSITIVE_ROIS_IMAGE_PREFIX_PATH = "../positive_rois/";
+
 
 		std::string filename;
 		std::string filenameSVG;
@@ -48,6 +50,7 @@ class ROISelector {
 		int runParser();
 		int findTags();
 		int preprocess();
+		void segmentate_positive_ROIs();
 		int cutROIs();
 		int writeImage();
 		void processSURF();
