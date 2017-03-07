@@ -42,6 +42,7 @@ class ROISelector {
 		std::vector<Line*> parsedLines;
 		void addImageToGroup(double middleX, double middleY);
 		void ROISelector::init();
+		cv::Mat ROISelector::shearMat(cv::Mat img, float shear);
 
 	public:
 		ROISelector();

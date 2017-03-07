@@ -28,7 +28,7 @@ img_channels = 1
 #%%
 #  data
 
-path1 = 'C:\\Users\\mmedek.MMEDEK-NB\\Documents\\Python Scripts\\data_roi_a'    #path of folder of images    
+path1 = 'C:\\Users\\mmedek.MMEDEK-NB\\Documents\\Python Scripts\\data_roi_d_radius'    #path of folder of images    
 path2 = 'C:\\Users\\mmedek.MMEDEK-NB\\Documents\\Python Scripts\\data_gray'  #path of folder to save images    
 
 listing = os.listdir(path1) 
@@ -52,8 +52,8 @@ immatrix = array([array(Image.open(path2 + '\\' + im2)).flatten()
               for im2 in imlist],'f')
             
 label=np.ones((num_samples,),dtype = int)
-label[0:23]=1
-label[23:]=0
+label[0:25]=1
+label[25:]=0
 #%%
 #data,Label = shuffle(immatrix,label, random_state=2)
 data,Label = immatrix,label
@@ -66,7 +66,7 @@ batch_size = 8
 # number of output classes
 nb_classes = 2
 # number of epochs to train
-nb_epoch = 15
+nb_epoch = 25
 
 
 # number of convolutional filters to use
@@ -82,9 +82,34 @@ nb_conv = 3
 
 # STEP 1: split X and y into training and testing sets
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1304)
+#X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.9685)
 
+X_train1 = X[0:22]
+X_train2 = X[25:47]
+X_train = np.vstack((X_train1, X_train2))
 
+X_test1 = X[22:25]
+X_test2 = X[47:50]
+X_test = np.vstack((X_test1, X_test2))
+
+y_test = np.empty((6, 1), dtype=int)
+a = 3
+for i in range(a):
+    y_test[i] = 1
+
+for i in range(a, 6):
+    y_test[i] = 0
+
+   
+y_train = np.empty((44, 1), dtype=int)
+a = 22
+for i in range(a):
+    y_train[i] = 1 
+    
+for i in range(a,44):
+    y_train[i] = 0 
+
+#%%
 X_train = X_train.reshape(X_train.shape[0], 1, img_rows, img_cols)
 X_test = X_test.reshape(X_test.shape[0], 1, img_rows, img_cols)
 
@@ -143,5 +168,8 @@ hist = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
 score = model.evaluate(X_test, Y_test, verbose=1)
 print('Test lost:', score[0])
 print('Test accuracy:', score[1])
-print(model.predict_classes(X_test[0:7]))
-print(Y_test[0:7])
+
+#%% 
+results = model.predict_classes(X_test[0:6]);
+print(model.predict_classes(X_test[0:6]))
+print(Y_test[0:6])

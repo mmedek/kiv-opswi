@@ -26,18 +26,18 @@ void prepareNegativeROIs() {
 	for (std::string& image : get_all_files_names_within_folder(folder)) {
 
 		selector->set_new_image(image);
-		//std::cout << "Processing image '" << image.c_str() << "' started" << std::endl;
+		std::cout << "Processing image '" << image.c_str() << "' started" << std::endl;
 		// success result = 1
-		//std::cout << "Result of parsing: " <<  << std::endl;
+		//std::cout << "Result of parsing: "  << std::endl;
 		selector->runParser();
-		//std::cout << "Result of selecting: " << selector->findTags() << std::endl;
-		selector->findTags();
+		std::cout << "Result of selecting: " << selector->findTags() << std::endl;
+		//selector->findTags();
 		//method for segmentation lines (in future, next shapes too) cut 128 x 128 ROIs
-		//std::cout << "Result of segmentations ROIs: " << selector->cutROIs() << std::endl;
-		selector->cutROIs();
-		//std::cout << "Result of equalization: " << selector->preprocess() << std::endl;
-		selector->preprocess();
-		//std::cout << "Processing image '" << image.c_str() << "' ended" << std::endl;
+		std::cout << "Result of segmentations ROIs: " << selector->cutROIs() << std::endl;
+		//selector->cutROIs();
+		std::cout << "Result of equalization: " << selector->preprocess() << std::endl;
+		//selector->preprocess();
+		std::cout << "Processing image '" << image.c_str() << "' ended" << std::endl;
 
 		run = true;
 	}

@@ -2,19 +2,11 @@
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
-from keras.optimizers import SGD,RMSprop,adam
 from keras.utils import np_utils
 
-from keras import backend as K
-K.set_image_dim_ordering('th')
-
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
 import os
-import theano
 from PIL import Image
-from numpy import *
 # SKLEARN
 from sklearn.utils import shuffle
 from sklearn.cross_validation import train_test_split
@@ -28,35 +20,34 @@ img_channels = 1
 #%%
 #  data
 
-path1 = 'C:\\Users\\mmedek.MMEDEK-NB\\Documents\\Python Scripts\\data_roi_a'    #path of folder of images    
-path2 = 'C:\\Users\\mmedek.MMEDEK-NB\\Documents\\Python Scripts\\data_gray'  #path of folder to save images    
+path1 = '../data_cnn'    #path of folder of images    
+path2 = '../data_cnn_gray'    #path of folder of new gray images    
 
 listing = os.listdir(path1) 
 num_samples=len(listing)
 
 for file in listing:
-    im = Image.open(path1 + '\\' + file)   
+    im = Image.open(path1 + '/' + file)   
     img = im.resize((img_rows,img_cols))
     gray = img.convert('L')
                 #need to do some more processing here           
-    gray.save(path2 +'\\' +  file, "JPEG")
+    gray.save(path2 +'/' +  file, "JPEG")
 
 imlist = os.listdir(path2)
 
-im1 = array(Image.open(path2 + '\\'+ imlist[0])) # open one image to get size
+im1 = array(Image.open(path2 + '/'+ imlist[0])) # open one image to get size
 m,n = im1.shape[0:2] # get the size of the images
 imnbr = len(imlist) # get the number of images
 
 # create matrix to store all flattened images
-immatrix = array([array(Image.open(path2 + '\\' + im2)).flatten()
+immatrix = array([array(Image.open(path2 + '/' + im2)).flatten()
               for im2 in imlist],'f')
             
 label=np.ones((num_samples,),dtype = int)
-label[0:23]=1
-label[23:]=0
-#%%
-#data,Label = shuffle(immatrix,label, random_state=2)
-data,Label = immatrix,label
+label[0:20]=0
+label[20:]=1
+
+data,Label = shuffle(immatrix,label, random_state=2)
 train_data = [data,Label]
 
 #%%
@@ -66,7 +57,7 @@ batch_size = 8
 # number of output classes
 nb_classes = 2
 # number of epochs to train
-nb_epoch = 15
+nb_epoch = 25
 
 
 # number of convolutional filters to use
@@ -82,7 +73,7 @@ nb_conv = 3
 
 # STEP 1: split X and y into training and testing sets
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1304)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=4)
 
 
 X_train = X_train.reshape(X_train.shape[0], 1, img_rows, img_cols)
@@ -126,22 +117,20 @@ model.add(Activation('relu'))
 model.add(Dropout(0.5))
 model.add(Dense(nb_classes))
 model.add(Activation('softmax'))
-model.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=["accuracy"])
-# print(model.summary())
+model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=["accuracy"])
+#print(model.summary())
 #%%
 
 hist = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
               verbose=1, validation_data=(X_test, Y_test))
             
             
-#hist = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
- #             verbose=1, validation_split=0.969)
+hist = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
+              verbose=1, validation_split=0.2)
+     
 
-
-#%%     
-
-score = model.evaluate(X_test, Y_test, verbose=1)
+score = model.evaluate(X_test, Y_test, verbose=0)
 print('Test lost:', score[0])
 print('Test accuracy:', score[1])
-print(model.predict_classes(X_test[0:7]))
-print(Y_test[0:7])
+print(model.predict_classes(X_test[1:9]))
+print(Y_test[1:9])

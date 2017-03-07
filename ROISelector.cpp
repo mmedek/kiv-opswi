@@ -170,6 +170,7 @@ void ROISelector::processSURF() {
 	std::string temp = NEGATIVE_ROIS_IMAGE_PREFIX_PATH;
 
 	for (int i = 0; i < this->surfGroups.size(); i++) {
+
 		for (int j = 0; j < this->surfGroups.at(i).size(); j++) {
 
 			if (j == 0) {
@@ -210,23 +211,72 @@ void ROISelector::processSURF() {
 
 			cv::Point second_point = cv::Point(matchLoc.x + img_object.cols, matchLoc.y + img_object.rows);
 
+			
 			cv::rectangle(img_display, matchLoc, second_point, cv::Scalar::all(0), 2, 8, 0);
 			cv::rectangle(result, matchLoc, second_point, cv::Scalar::all(0), 2, 8, 0);
-
-			cv::Rect myROI(matchLoc.x, matchLoc.y, second_point.x - matchLoc.x, second_point.y - matchLoc.y);
-			cv::Mat cropped(img_scene, myROI);
-
-			//cv::imwrite(this->surfGroups[i][j]->getFilename(), cropped);
-			temp = NEGATIVE_ROIS_IMAGE_PREFIX_PATH;
-			temp += "roi_";
-			temp += (char)('a' + i);
-			temp.append("/"); // groups a-z
-			temp.append(this->surfGroups[i][j]->getFilename().substr(this->surfGroups[i][j]->getFilename().find_last_of("/\\") + 1));
 			
-			cv::imwrite(temp, cropped);
+			cv::Rect myROI(matchLoc.x, matchLoc.y, second_point.x - matchLoc.x, second_point.y - matchLoc.y);
+			
+			float start_rotation = -1;
+			float start_shear = -0.1;
+			cv::Point2f src_center(matchLoc.x + (second_point.x - matchLoc.x)/2, matchLoc.y + (second_point.y - matchLoc.y)/2);
+			for (int k = 0; k < 5; k++) {
+				
+				cv::Mat rot_mat = getRotationMatrix2D(src_center, start_rotation, 1.0);
+				cv::Mat dst;
+				warpAffine(img_scene, dst, rot_mat, img_scene.size());
 
+				temp = NEGATIVE_ROIS_IMAGE_PREFIX_PATH;
+				temp += "roi_";
+				temp += (char)('a' + i);
+				temp.append("/"); // groups a-z
+				temp.append(this->surfGroups[i][j]->getFilename().substr(this->surfGroups[i][j]->getFilename().find_last_of("/\\") + 1));
+				size_t lastindex = temp.find_last_of(".");
+				std::string rawname = temp.substr(0, lastindex);
+			
+				start_shear = -0.1;
+				for (int l = 0; l < 5; l++) {
+					
+					cv::Mat cropped(dst, myROI);
+					cv::Mat sheared = shearMat(cropped, start_shear);
+
+					std::ostringstream ss;
+					ss << rawname;
+					ss << "_r_";
+					ss << k;
+					ss << "s_";
+					ss << l;
+					ss << ".jpg";
+					//std::cout << "temp " << ss.str().c_str() << std::endl;
+					cv::imwrite(ss.str().c_str(), sheared);
+
+					start_shear += 0.05;
+				}
+				
+				start_rotation += 0.5;
+			}
 		}
 	}
+}
+
+cv::Mat ROISelector::shearMat(cv::Mat img, float shear) {
+
+	cv::Mat dest;
+	img.copyTo(dest);
+	
+	cv::Mat M(2, 3, CV_32F);
+
+	M.at<float>(0, 0) = 1;
+	M.at<float>(0, 1) = shear;
+	M.at<float>(0, 2) = 0;
+
+	M.at<float>(1, 0) = 0;
+	M.at<float>(1, 1) = 1;
+	M.at<float>(1, 2) = 0;
+	cv::Mat new_dest;
+	warpAffine(dest, new_dest, M, cv::Size(dest.cols, dest.rows));
+	return new_dest;
+
 }
 
 void ROISelector::segmentate_positive_ROIs() {

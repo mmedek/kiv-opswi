@@ -28,7 +28,7 @@ img_channels = 1
 #%%
 #  data
 
-path1 = 'C:\\Users\\mmedek.MMEDEK-NB\\Documents\\Python Scripts\\data_roi_a'    #path of folder of images    
+path1 = 'C:\\Users\\mmedek.MMEDEK-NB\\Documents\\Python Scripts\\data'    #path of folder of images    
 path2 = 'C:\\Users\\mmedek.MMEDEK-NB\\Documents\\Python Scripts\\data_gray'  #path of folder to save images    
 
 listing = os.listdir(path1) 
@@ -66,7 +66,7 @@ batch_size = 8
 # number of output classes
 nb_classes = 2
 # number of epochs to train
-nb_epoch = 15
+nb_epoch = 25
 
 
 # number of convolutional filters to use
@@ -82,9 +82,35 @@ nb_conv = 3
 
 # STEP 1: split X and y into training and testing sets
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1304)
+#X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.9685)
 
+X_train1 = X[0:19]
+X_train2 = X[23:42]
+X_train = np.vstack((X_train1, X_train2))
 
+X_test1 = X[19:23]
+X_test2 = X[42:758]
+X_test = np.vstack((X_test1, X_test2))
+
+y_test = np.empty((720, 1), dtype=int)
+a = 4
+for i in range(a):
+    y_test[i] = 1
+
+a = 720
+for i in range(4, a):
+    y_test[i] = 0
+
+   
+y_train = np.empty((38, 1), dtype=int)
+a = 19
+for i in range(a):
+    y_train[i] = 1 
+    
+for i in range(a,38):
+    y_train[i] = 0 
+
+#%%
 X_train = X_train.reshape(X_train.shape[0], 1, img_rows, img_cols)
 X_test = X_test.reshape(X_test.shape[0], 1, img_rows, img_cols)
 
@@ -143,5 +169,5 @@ hist = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
 score = model.evaluate(X_test, Y_test, verbose=1)
 print('Test lost:', score[0])
 print('Test accuracy:', score[1])
-print(model.predict_classes(X_test[0:7]))
-print(Y_test[0:7])
+print(model.predict_classes(X_test[0:1]))
+print(Y_test[0:1])
