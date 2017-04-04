@@ -66,7 +66,7 @@ batch_size = 8
 # number of output classes
 nb_classes = 2
 # number of epochs to train
-nb_epoch = 25
+nb_epoch = 10
 
 
 # number of convolutional filters to use
@@ -101,12 +101,12 @@ for i in range(a, 100):
     y_test[i] = 0
 
    
-y_train = np.empty((750, 1), dtype=int)
+y_train = np.empty((650, 1), dtype=int)
 a = 325
 for i in range(a):
     y_train[i] = 1 
     
-for i in range(a,750):
+for i in range(a,650):
     y_train[i] = 0 
 
 #%%
@@ -153,6 +153,7 @@ model.add(Dense(nb_classes))
 model.add(Activation('softmax'))
 model.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=["accuracy"])
 # print(model.summary())
+
 #%%
 
 hist = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
@@ -173,3 +174,11 @@ print('Test accuracy:', score[1])
 results = model.predict_classes(X_test[0:650]);
 print(model.predict_classes(X_test[0:650]))
 print(Y_test[0:650])
+
+# serialize model to JSON
+model_json = model.to_json()
+with open("model.json", "w") as json_file:
+    json_file.write(model_json)
+# serialize weights to HDF5
+model.save_weights("model.h5")
+print("Saved model to disk")

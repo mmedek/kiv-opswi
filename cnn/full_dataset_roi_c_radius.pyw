@@ -173,3 +173,11 @@ print('Test accuracy:', score[1])
 results = model.predict_classes(X_test[0:20]);
 print(model.predict_classes(X_test[0:20]))
 print(Y_test[0:20])
+
+# serialize model to JSON
+model_json = model.to_json()
+with open("model.json", "w") as json_file:
+    json_file.write(model_json)
+# serialize weights to HDF5
+model.save_weights("model.h5")
+print("Saved model to disk")
