@@ -45,3 +45,7 @@ x64
 # images
 
 *.svg
+
+# pycharm
+recognizer/.idea/*
+recognizer/__pycache__/*
