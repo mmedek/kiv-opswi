@@ -19,14 +19,14 @@ class EvaluationData:
             sys.exit('In Folder \'' + input_field[0] + '\' is not three items (image.jpg, model.h5, model.json)!')
 
         self.folder = input_field[0]
-
-        if (input_field[1].rsplit('.', 1)[1] != EvaluationData.__CONST_JPG(self)):
+        # model and image can be sorted differently according to filesystem!
+        if (input_field[1].rsplit('.', 1)[1] != EvaluationData.__CONST_H5(self)):
             sys.exit('In Folder \'' + input_field[0] + '\' was not found image.jpg')
-        self.image_path = self.folder + '/' + input_field[1]
+        self.model_h5 = self.folder + '/' + input_field[1]
 
-        if (input_field[2].rsplit('.', 1)[1] != EvaluationData.__CONST_H5(self)):
+        if (input_field[2].rsplit('.', 1)[1] != EvaluationData.__CONST_JPG(self)):
             sys.exit('In Folder \'' + input_field[0] + '\' was not found h5 model file')
-        self.model_h5 = self.folder + '/' + input_field[2]
+        self.image_path = self.folder + '/' + input_field[2]
 
         if (input_field[3].rsplit('.', 1)[1] != EvaluationData.__CONST_JSON(self)):
             sys.exit('In Folder \'' + input_field[0] + '\' was not found json model file')

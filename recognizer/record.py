@@ -10,21 +10,23 @@ import sys
 
 
 class Record:
-    def __new__(self, input):
+    def __init__(self, input):
 
-        if (self.__checkJPEG(self, input) == False):
-            sys.exit('Unregognized image ' + input)
+        self.path = input
+
+        if (self.__checkJPEG() == False):
+            sys.exit('Unrecognized image ' + input)
         else:
-            if (self.__parseInput(self, input) == False):
+            if (self.__parseInput() == False):
                 sys.exit('Wrong format of image. Use JPEG image')
             else:
                 print('Image name ' + input + ' was successfully parsed')
 
-            return self
+            return None
 
-    def __parseInput(self, input):
+    def __parseInput(self):
         "shape of input: BlueTooth_TX-55AS650B_%NH-4540390(35418).jpg"
-        splitted = input.split("_")
+        splitted = self.path.split("_")
 
         if (len(splitted) != 3):
             return False
@@ -40,13 +42,13 @@ class Record:
         self.photo_number = '(' + identifier.rsplit('(', 1)[1]
         "jpg"
         self.suffix = splitted[2].rsplit('.', 1)[1]
-        self.full_path = input
+        self.full_path = self.path
 
         return True
 
-    def __checkJPEG(self, path):
+    def __checkJPEG(self):
         try:
-            type = imghdr.what(path)
+            type = imghdr.what(self.path)
         except:
             return False
 
@@ -55,5 +57,5 @@ class Record:
 
         return False
 
-    def __CONST_JPG():
+    def __CONST_JPG(self):
         return "jpeg"
