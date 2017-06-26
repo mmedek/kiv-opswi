@@ -9,8 +9,6 @@ from keras import backend as K
 K.set_image_dim_ordering('th')
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
 import os
 import theano
 from PIL import Image
@@ -28,8 +26,8 @@ img_channels = 1
 #%%
 #  data
 
-path1 = 'C:\\Users\\mmedek.MMEDEK-NB\\Documents\\Python Scripts\\data_roi_b_radius'    #path of folder of images    
-path2 = 'C:\\Users\\mmedek.MMEDEK-NB\\Documents\\Python Scripts\\data_gray'  #path of folder to save images    
+path1 = 'data\\data_roi_b_radius'    #path of folder of images
+path2 = 'data\\data_gray'  #path of folder to save images
 
 listing = os.listdir(path1) 
 num_samples=len(listing)

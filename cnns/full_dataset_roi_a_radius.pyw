@@ -9,8 +9,6 @@ from keras import backend as K
 K.set_image_dim_ordering('th')
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
 import os
 import theano
 from PIL import Image
@@ -28,10 +26,10 @@ img_channels = 1
 #%%
 #  data
 
-path1 = 'C:\\Users\\mmedek.MMEDEK-NB\\Documents\\Python Scripts\\data_roi_a_radius'    #path of folder of images    
-path2 = 'C:\\Users\\mmedek.MMEDEK-NB\\Documents\\Python Scripts\\data_gray'  #path of folder to save images    
+path1 = 'data\\data_roi_a_radius'    #path of folder of images
+path2 = 'data\\data_gray'  #path of folder to save images
 
-listing = os.listdir(path1) 
+listing = os.listdir(path1)
 num_samples=len(listing)
 
 for file in listing:
@@ -181,50 +179,4 @@ print("Saved model to disk")
 #%% 
 results = model.predict_classes(X_test[0:150]);
 print(results)
-#%% 
-
-# input image
-original_image = cv2.imread('C:\\Users\\mmedek.MMEDEK-NB\\Documents\\Visual Studio 2015\\Projects\\ROISelector\\ROISelector\\cnn\\orig_neg_train.jpg', 0)
-
-# equalize input image
-equalized_image = cv2.equalizeHist(original_image)
-# image size same as in traninig
-img_rows, img_cols = 128, 128
-
-
-# for i in range(0, len(self.data)):
-# positive ROI
-template = cv2.imread('C:\\Users\\mmedek.MMEDEK-NB\\Documents\\Visual Studio 2015\\Projects\\ROISelector\\ROISelector\\cnn\\roi.jpg', 0)
-
-
-w, h = template.shape[::-1]
- 
-original_image = equalized_image.copy()
-method = eval('cv2.TM_CCOEFF_NORMED')
-
-
-# Apply template Matching
-res = cv2.matchTemplate(original_image,template,method)
-min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-
-# If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
-if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
-    top_left = min_loc
-else:
-    top_left = max_loc
-
-cropped_image = original_image[top_left[1] : top_left[1] + h, top_left[0] : top_left[0] + w]
-cropped_image = cropped_image.astype('float32')
-cropped_image /= 255
-cv2.imwrite('C:\\Users\\mmedek.MMEDEK-NB\\Documents\\Visual Studio 2015\\Projects\\ROISelector\\ROISelector\\cnn\\cropped_image.jpg', cropped_image)
-
-
-
-
-X_test = cropped_image; 
-X_test = np.expand_dims(X_test, axis=0)
-X_test = np.expand_dims(X_test, axis=0)
-print(X_test.shape)
-results = model.predict_classes(X_test);
-print(results)
-
+#%%
