@@ -26,27 +26,27 @@ img_channels = 1
 #%%
 #  data
 
-path1 = 'data\\data_roi_a_radius'    #path of folder of images
-path2 = 'data\\data_gray'  #path of folder to save images
+path1 = 'data/data_roi_a_radius'    #path of folder of images
+path2 = 'data/data_gray'  #path of folder to save images
 
 listing = os.listdir(path1)
 num_samples=len(listing)
 
 for file in listing:
-    im = Image.open(path1 + '\\' + file)   
+    im = Image.open(path1 + '/' + file)
     img = im.resize((img_rows,img_cols))
     gray = img.convert('L')
                 #need to do some more processing here           
-    gray.save(path2 +'\\' +  file, "JPEG")
+    gray.save(path2 +'/' +  file, "JPEG")
 
 imlist = os.listdir(path2)
 
-im1 = array(Image.open(path2 + '\\'+ imlist[0])) # open one image to get size
+im1 = array(Image.open(path2 + '/'+ imlist[0])) # open one image to get size
 m,n = im1.shape[0:2] # get the size of the images
 imnbr = len(imlist) # get the number of images
 
 # create matrix to store all flattened images
-immatrix = array([array(Image.open(path2 + '\\' + im2)).flatten()
+immatrix = array([array(Image.open(path2 + '/' + im2)).flatten()
               for im2 in imlist],'f')
             
 label=np.ones((num_samples,),dtype = int)
