@@ -85,7 +85,7 @@ class CNNRunner:
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 cv2.putText(colorful_image, list_err[i].err_name, (int(list_err[i].x + CNNRunner.CONST_WIDTH_LINE / 2),
                                                                    int(list_err[i].y - CNNRunner.CONST_WIDTH_LINE / 2)),
-                            font, 1, (0, 0, 255), 2, cv2.CV_AA)
+                            font, 1, (0, 0, 255), 2)
             print('Errors were found. Saving image with errors to ' + CNNRunner.ERRORS_IMG_PATH)
             cv2.imwrite(CNNRunner.ERRORS_IMG_PATH, colorful_image)
         else:
