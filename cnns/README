@@ -1,1 +1,3 @@
+This programme is created for trained on data from roi_selector and after that saved CNNs for recognizer - for every error exist one script
+
 Run: python [name of script]

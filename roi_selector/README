@@ -1,0 +1,6 @@
+Programme which will generated ROI images from .svg and .jpeg files according to highlighted errors on svg images
+
+Run: 
+cmake .
+make
+./roi_selector
