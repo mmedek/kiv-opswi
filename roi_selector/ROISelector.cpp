@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <windows.h>
 
 #include "opencv2/core.hpp"
 #include "opencv2/imgproc.hpp"
@@ -7,6 +6,7 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/calib3d.hpp"
 
+#include <sys/stat.h>
 #include "ROISelector.h"
 #include "api.h"
 
@@ -43,15 +43,14 @@ void ROISelector::init() {
 
 FILE* ROISelector::openFile(std::string filename) {
 
-	FILE* file;
-	fopen_s(&file, filename.c_str(), "r");
-	if (!file)
+        FILE* tmp_file = fopen(filename.c_str(), "r");
+        if (tmp_file == NULL)
 	{
 		std::cerr << "Opening of file '" << filename.c_str() << "' failed" << std::endl;
 		return nullptr;
 	}
 
-	return file;
+        return tmp_file;
 }
 
 int ROISelector::preprocess() {
@@ -103,7 +102,7 @@ int ROISelector::cutROIs() {
 	// separate name of file and index of line with '_'
 	segmentFilename.append(this->filename);
 	segmentFilename.append("_");
-	index = 0;
+        int indexx = 0;
 
 	for (int i = 0; i < this->getParsedLines().size(); i++) {
 
@@ -138,7 +137,7 @@ int ROISelector::cutROIs() {
 		
 		this->segment = cv::Mat(equalizedImage, cv::Rect(x1, y1, 2 * ROI_WIDTH, 2 * ROI_HEIGHT));
 		std::string temp = segmentFilename;
-		this->segmentedImageFilename = (temp.append(std::to_string(index++))).append(".jpg");
+                this->segmentedImageFilename = (temp.append(std::to_string(indexx++))).append(".jpg");
 		this->addImageToGroup(middleX, middleY);		
 	}
 
@@ -153,7 +152,7 @@ void ROISelector::writeGroups() {
 			std::string temp = SEGMENTED_IMAGE_PREFIX_PATH;
 			temp += (char)('a' + i);
 			temp.append("/"); // groups a-z
-			CreateDirectory(temp.c_str(), NULL);
+                        mkdir(temp.c_str(), S_IRWXU);
 			temp.append(this->surfGroups[i][j]->getFilename().substr(this->surfGroups[i][j]->getFilename().find_last_of("/\\") + 1));
 			cv::imwrite(temp, this->surfGroups[i][j]->getImage());
 		}
@@ -167,7 +166,7 @@ void ROISelector::processSURF() {
 	cv::Mat img_scene;
 	cv::Mat img_object;
 	cv::Mat result;
-	std::string temp = NEGATIVE_ROIS_IMAGE_PREFIX_PATH;
+        std::string temp = POSITIVE_ROIS_IMAGE_PREFIX_PATH;
 
 	for (int i = 0; i < this->surfGroups.size(); i++) {
 
@@ -175,12 +174,12 @@ void ROISelector::processSURF() {
 
 			if (j == 0) {
 				img_object = this->surfGroups[i][0]->getImage();
-				// create new folder for saving ROIs
-				temp = NEGATIVE_ROIS_IMAGE_PREFIX_PATH;
+                                // create new folder for saving ROIs
+                                temp = POSITIVE_ROIS_IMAGE_PREFIX_PATH;
 				temp += "roi_";
 				temp += (char)('a' + i);
 				temp.append("/"); // groups a-z
-				CreateDirectory(temp.c_str(), NULL);
+                                mkdir(temp.c_str(), S_IRWXU);
 
 				continue;
 			}
@@ -226,7 +225,7 @@ void ROISelector::processSURF() {
 				cv::Mat dst;
 				warpAffine(img_scene, dst, rot_mat, img_scene.size());
 
-				temp = NEGATIVE_ROIS_IMAGE_PREFIX_PATH;
+                                temp = POSITIVE_ROIS_IMAGE_PREFIX_PATH;
 				temp += "roi_";
 				temp += (char)('a' + i);
 				temp.append("/"); // groups a-z
@@ -284,18 +283,18 @@ void ROISelector::segmentate_positive_ROIs() {
 	cv::Mat img_scene;
 	cv::Mat img_object;
 	cv::Mat result;
-	std::string temp = POSITIVE_ROIS_IMAGE_PREFIX_PATH;
+        std::string temp = NEGATIVE_ROIS_IMAGE_PREFIX_PATH;
 
 	for (int i = 0; i < this->surfGroups.size(); i++) {
 
 		// get template of negative ROI and select same image as positive ROI
 		img_object = this->surfGroups[i][0]->getImage();
 		// create new folder for saving ROIs
-		temp = POSITIVE_ROIS_IMAGE_PREFIX_PATH;
+                temp = NEGATIVE_ROIS_IMAGE_PREFIX_PATH;
 		temp += "roi_";
 		temp += (char)('a' + i);
 		temp.append("/"); // groups a-z
-		CreateDirectory(temp.c_str(), NULL);
+                mkdir(temp.c_str(), S_IRWXU);
 
 		img_scene = this->equalizedImage;
 
@@ -329,7 +328,7 @@ void ROISelector::segmentate_positive_ROIs() {
 		cv::Mat cropped(img_scene, myROI);
 
 		//cv::imwrite(this->surfGroups[i][j]->getFilename(), cropped);
-		temp = POSITIVE_ROIS_IMAGE_PREFIX_PATH;
+                temp = NEGATIVE_ROIS_IMAGE_PREFIX_PATH;
 		temp += "roi_";
 		temp += (char)('a' + i);
 		temp.append("/"); // groups a-z

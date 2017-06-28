@@ -23,9 +23,9 @@ class ROISelector {
 		// height is 164 - this is half height
 		const int ROI_HEIGHT = 64;
 		// prefix of filepatg segmented image
-		const std::string SEGMENTED_IMAGE_PREFIX_PATH = "../segmented_images/";
-		const std::string NEGATIVE_ROIS_IMAGE_PREFIX_PATH = "../negative_rois/";
-		const std::string POSITIVE_ROIS_IMAGE_PREFIX_PATH = "../positive_rois/";
+                const std::string SEGMENTED_IMAGE_PREFIX_PATH = "data/segmented_images/";
+                const std::string POSITIVE_ROIS_IMAGE_PREFIX_PATH = "data/positive_rois/";
+                const std::string NEGATIVE_ROIS_IMAGE_PREFIX_PATH = "data/negative_rois/";
 
 
 		std::string filename;
@@ -41,9 +41,8 @@ class ROISelector {
 		std::vector<XMLTag*> parsedRootScope;
 		std::vector<Line*> parsedLines;
 		void addImageToGroup(double middleX, double middleY);
-		void ROISelector::init();
-		cv::Mat ROISelector::shearMat(cv::Mat img, float shear);
-
+                void init();
+                cv::Mat shearMat(cv::Mat img, float shear);
 	public:
 		ROISelector();
 		void set_new_image(std::string);
