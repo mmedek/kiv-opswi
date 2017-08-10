@@ -2,7 +2,7 @@
 
 There are two branches:
 
-a) master for python 3.5 - run on Windows
+a) master for python 3.5 - run on Windows - development in this branch was stopped
 b) branch python-27 for python 2.7 - run on Linux
 
 Project contains 3 main programs (in every programme folder you can find README):
