@@ -98,6 +98,8 @@ int ROISelector::cutROIs() {
 	double y1 = 0;
 	double y2 = 0;
 	std::string segmentFilename = SEGMENTED_IMAGE_PREFIX_PATH;
+
+    mkdir(segmentFilename.c_str(), S_IRWXU);
 	// add name of processed file
 	// separate name of file and index of line with '_'
 	segmentFilename.append(this->filename);
@@ -152,7 +154,7 @@ void ROISelector::writeGroups() {
 			std::string temp = SEGMENTED_IMAGE_PREFIX_PATH;
 			temp += (char)('a' + i);
 			temp.append("/"); // groups a-z
-                        mkdir(temp.c_str(), S_IRWXU);
+            mkdir(temp.c_str(), S_IRWXU);
 			temp.append(this->surfGroups[i][j]->getFilename().substr(this->surfGroups[i][j]->getFilename().find_last_of("/\\") + 1));
 			cv::imwrite(temp, this->surfGroups[i][j]->getImage());
 		}
@@ -166,9 +168,11 @@ void ROISelector::processSURF() {
 	cv::Mat img_scene;
 	cv::Mat img_object;
 	cv::Mat result;
-        std::string temp = POSITIVE_ROIS_IMAGE_PREFIX_PATH;
+    std::string temp = POSITIVE_ROIS_IMAGE_PREFIX_PATH;
+    mkdir(temp.c_str(), S_IRWXU);
 
-	for (int i = 0; i < this->surfGroups.size(); i++) {
+
+    for (int i = 0; i < this->surfGroups.size(); i++) {
 
 		for (int j = 0; j < this->surfGroups.at(i).size(); j++) {
 
@@ -179,7 +183,7 @@ void ROISelector::processSURF() {
 				temp += "roi_";
 				temp += (char)('a' + i);
 				temp.append("/"); // groups a-z
-                                mkdir(temp.c_str(), S_IRWXU);
+                mkdir(temp.c_str(), S_IRWXU);
 
 				continue;
 			}
@@ -239,13 +243,19 @@ void ROISelector::processSURF() {
 					cv::Mat cropped(dst, myROI);
 					cv::Mat sheared = shearMat(cropped, start_shear);
 
-					std::ostringstream ss;
-					ss << rawname;
-					ss << "_r_";
-					ss << k;
-					ss << "s_";
-					ss << l;
-					ss << ".jpg";
+                    std::ostringstream ss;
+					if (start_rotation == 0 && start_shear == 0) {
+                        ss << rawname;
+                        ss << "_default";
+                    }
+                    else {
+                        ss << rawname;
+                        ss << "_r_";
+                        ss << k;
+                        ss << "s_";
+                        ss << l;
+                        ss << ".jpg";
+                    }
 					//std::cout << "temp " << ss.str().c_str() << std::endl;
 					cv::imwrite(ss.str().c_str(), sheared);
 
@@ -278,14 +288,15 @@ cv::Mat ROISelector::shearMat(cv::Mat img, float shear) {
 
 }
 
-void ROISelector::segmentate_positive_ROIs() {
+void ROISelector::segmentate_negative_ROIs() {
 
 	cv::Mat img_scene;
 	cv::Mat img_object;
 	cv::Mat result;
-        std::string temp = NEGATIVE_ROIS_IMAGE_PREFIX_PATH;
+    std::string temp = NEGATIVE_ROIS_IMAGE_PREFIX_PATH;
+    mkdir(temp.c_str(), S_IRWXU);
 
-	for (int i = 0; i < this->surfGroups.size(); i++) {
+    for (int i = 0; i < this->surfGroups.size(); i++) {
 
 		// get template of negative ROI and select same image as positive ROI
 		img_object = this->surfGroups[i][0]->getImage();
@@ -328,7 +339,7 @@ void ROISelector::segmentate_positive_ROIs() {
 		cv::Mat cropped(img_scene, myROI);
 
 		//cv::imwrite(this->surfGroups[i][j]->getFilename(), cropped);
-                temp = NEGATIVE_ROIS_IMAGE_PREFIX_PATH;
+        temp = NEGATIVE_ROIS_IMAGE_PREFIX_PATH;
 		temp += "roi_";
 		temp += (char)('a' + i);
 		temp.append("/"); // groups a-z

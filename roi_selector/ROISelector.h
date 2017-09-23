@@ -23,9 +23,9 @@ class ROISelector {
 		// height is 164 - this is half height
 		const int ROI_HEIGHT = 64;
 		// prefix of filepatg segmented image
-                const std::string SEGMENTED_IMAGE_PREFIX_PATH = "data/segmented_images/";
-                const std::string POSITIVE_ROIS_IMAGE_PREFIX_PATH = "data/positive_rois/";
-                const std::string NEGATIVE_ROIS_IMAGE_PREFIX_PATH = "data/negative_rois/";
+        const std::string SEGMENTED_IMAGE_PREFIX_PATH = "data/segmented_images/";
+        const std::string POSITIVE_ROIS_IMAGE_PREFIX_PATH = "data/positive_rois/";
+        const std::string NEGATIVE_ROIS_IMAGE_PREFIX_PATH = "data/negative_rois/";
 
 
 		std::string filename;
@@ -50,7 +50,7 @@ class ROISelector {
 		int runParser();
 		int findTags();
 		int preprocess();
-		void segmentate_positive_ROIs();
+		void segmentate_negative_ROIs();
 		int cutROIs();
 		int writeImage();
 		void processSURF();

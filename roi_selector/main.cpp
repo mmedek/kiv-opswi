@@ -59,6 +59,8 @@ void prepareNegativeROIs() {
     std::string folder = "data/ABoard_n/";
     bool run = false;
 
+    std::cout << "Generating negative ROIs started" << std::endl;
+
     for (std::string& image : get_all_files_names_within_folder(folder)) {
 
         selector->set_new_image(image);
@@ -70,10 +72,13 @@ void prepareNegativeROIs() {
         //std::cout << "Result of segmentations ROIs: " << selector->cutROIs() << std::endl;
         //std::cout << "Result of equalization: " <<  << std::endl;
         selector->preprocess();
-        selector->segmentate_positive_ROIs();
+        selector->segmentate_negative_ROIs();
 
         //std::cout << "Processing image '" << image.c_str() << "' ended" << std::endl;
     }
+
+    std::cout << "Generating negative ROIs ended" << std::endl;
+
 
 }
 
@@ -94,7 +99,7 @@ std::vector<std::string> get_all_files_names_within_folder(std::string folder) {
 
             // we want save only jpg files
             if (path.substr(path.find_last_of(".") + 1) == "svg") {
-                std::cout <<  path << std::endl;
+                // std::cout <<  path << std::endl;
                 names.push_back(fullname);
             }
         }
