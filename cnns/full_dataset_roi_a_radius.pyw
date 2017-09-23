@@ -7,6 +7,8 @@ from keras.utils import np_utils
 
 from keras import backend as K
 K.set_image_dim_ordering('th')
+import os
+import sys
 
 import numpy as np
 import os
@@ -87,7 +89,7 @@ X_train2 = X[575:1075]
 X_train = np.vstack((X_train1, X_train2))
 
 X_test1 = X[500:575]
-X_test2 = X[1075:]
+X_test2 = X[1075:1150]
 X_test = np.vstack((X_test1, X_test2))
 
 y_test = np.empty((150, 1), dtype=int)
